@@ -1,0 +1,239 @@
+VS CODE EXTENSION: franneck94
+    Coding Tools Extension Pack
+    Python Dev Extension Pack
+
+# TESTS:
+
+# PYLINT:
+pylint --help
+pylint test_pylint.py
+pylint --generate-rcfile > pylintrc
+    go to [MESSAGES CONTROL] and edit disable= and add:
+        # User-defined
+        trailing-whitespace,
+        missing-module-docstring,
+        missing-class-docstring,
+        missing-function-docstring
+
+    if we want to only ignore for a file then go to file and write on top:
+    # pylint: disable=invalid-name
+
+#================================================================================
+# FLAKE8
+flake8 test_flake8.py 
+ .flake8 file:
+        [flake8]
+        ignore = W291,F501
+        exclude =
+            .git,
+            __pycache__,
+            docs/source/conf.py,
+            old,
+            build,
+            dist
+        max-complexity = 10
+
+#================================================================================
+# ISORT
+
+see difference: isort test_isort.py --diff
+use: isort.clg
+isort test_isort.py
+
+#AUTOPEP8
+use .flake8 config file
+
+diff: autopep8 test_autopep8.py --diff
+autopep8 test_autopep8.py > new.py
+for modifying existing file: autopep8 --in-place test_autopep8.py 
+
+#================================================================================
+# BLACK
+
+see diff: black test_black.py --diff
+black test_black.py 
+skip string related changes: black test_black.py -S
+set max line length: black test_black.py --line-length 120
+
+#================================================================================
+# CHECK DOC STYLE
+
+pydocstyle --convention=google test_pydocstyle.py 
+make .pydocstyle config file:
+        [pydocstyle]
+        inherit = false
+        ignore =  D100,D203,D405
+        match= .*\.py
+
+#================================================================================
+# CHECK INNOTATION
+mypy vector_type_annotations.py 
+
+#================================================================================
+# PROFILYING
+pip install snakeviz
+
+snakeviz /Users/rahul/Documents/PYTHON_PROG/UdemyPythonProEng-master/Chapter03/Profiling/profiling_stats.prof
+
+# python project:
+https://github.com/franneck94/Python-Project-Template
+
+
+#================================================================================
+#MKDOCS
+pip install mkdocs mkdocstrings mkdocstrings-python mkdocs-material Pygments 
+mkdocs build
+mkdocs serve
+
+# DEPLOY TO PYPI
+setup project on git then
+deploy: mkdocs gh-deploy
+
+#================================================================================
+# PRECOMMIT
+pip install pre-commit
+pre-commit --help
+pre-commit install 
+pre-commit run # check only precommit files
+pre-commit run --all-files # check all files
+
+#================================================================================
+# CHECK CODE COVERAGE:
+pip install pytest-cov
+pip install -e .
+pytest tests
+pytest --cov=fastvector tests --cov-report=html
+
+#================================================================================
+PYTEST
+
+# run : pytest
+# run verbose:
+pytest -v
+pytest -vv 
+
+read more details: pytest -r
+
+run only marked test:
+pytest -m engine  # run test marked engine
+
+pytest -m "body and engine"  # run test marked engine and body
+pytest -m "body and smoke"  # run test marked smoke and body 
+pytest -m "body or engine"   # run test marked body or engine
+pytest -m "not entertainment"  # run test marked anything except entertainment
+pytest -m "not sport"         # run test marked anything except sport
+pytest -m "not sport and not body"  # run test marked anything except sport and body
+
+#help:
+pytest -h
+
+# see all markers:
+pytest --markers
+
+# REPORTING
+pip install pytest-html
+
+generate reports:
+ pytest --html="results.html"
+pytest --junitxml="results.xml"
+
+# MUTITHREADING
+
+pip install pytest-xdist
+
+pytest -n4 # number of threads
+pytest -n2
+pytest -n8
+pytest -nauto
+
+
+# run only specific test:
+pytest -k test_name folder_name.  # test_name can b markers
+
+# ALLURE REPORTING
+pip install allure-pytest
+
+#================================================================================
+TOX
+
+run: tox
+rerun: tox -r
+
+[tox]
+envlist = unit_tests,typechecks,stylechecks,py36,py35
+or envlist = unit_tests,typechecks,stylechecks,py{36,35}
+skipsdist = True
+
+
+[testenv]
+install_command = pip install {opts} {packages}
+deps =
+    -rtest_requirements.txt
+
+passenv =
+     KAGGLE_USERNAME
+     KAGGLE_KEY
+
+setenv =
+  PYTHONPATH=.
+
+commands=
+    kaggle competitions download -c house-prices-advanced-regression-techniques -p gradient_boosting_model/datasets/
+    unzip -o gradient_boosting_model/datasets/house-prices-advanced-regression-techniques.zip -d gradient_boosting_model/datasets
+    mv gradient_boosting_model/datasets/train.csv gradient_boosting_model/datasets/houseprice.csv
+    python gradient_boosting_model/train_pipeline.py
+    pytest \
+          -s \
+          -vv \
+          {posargs:tests/}
+
+
+[testenv:unit_tests]
+envdir = {toxworkdir}/unit_tests
+deps =
+     {[testenv]deps}
+
+setenv =
+  PYTHONPATH=.
+
+commands =
+     python gradient_boosting_model/train_pipeline.py
+     pytest \
+           -s \
+           -vv \
+           {posargs:tests/}
+
+[testenv:train]
+envdir = {toxworkdir}/train
+deps =
+     {[testenv]deps}
+
+setenv =
+  PYTHONPATH=.
+
+commands =
+     python gradient_boosting_model/train_pipeline.py
+
+[testenv:typechecks]
+envdir = {toxworkdir}/unit_tests
+
+deps =
+     {[testenv:unit_tests]deps}
+
+commands = {posargs:mypy gradient_boosting_model}
+
+
+[testenv:stylechecks]
+envdir = {toxworkdir}/unit_tests
+
+deps =
+     {[testenv:unit_tests]deps}
+
+commands = {posargs:flake8 gradient_boosting_model tests}
+
+
+[flake8]
+exclude = .git,env
+max-line-length = 90
+
+
